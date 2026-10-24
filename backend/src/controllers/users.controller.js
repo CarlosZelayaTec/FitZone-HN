@@ -3,7 +3,7 @@ const pool = require("../config/db");
 const getMyProfile = async (req, res) => {
   try {
     const resultado = await pool.query(
-      `SELECT id, nombre, email, rol, created_at
+      `SELECT id, nombre, email, rol, fecha_registro
        FROM usuarios
        WHERE id = $1`,
       [req.user.id]
@@ -30,9 +30,9 @@ const getMyProfile = async (req, res) => {
 const listUsers = async (req, res) => {
   try {
     const resultado = await pool.query(
-      `SELECT id, nombre, email, rol, created_at
+      `SELECT id, nombre, email, rol, fecha_registro
        FROM usuarios
-       ORDER BY created_at DESC`
+       ORDER BY fecha_registro DESC`
     );
 
     return res.status(200).json({
