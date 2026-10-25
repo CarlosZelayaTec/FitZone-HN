@@ -31,13 +31,13 @@ const register = async (req, res) => {
       });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const contrasenaHash = await bcrypt.hash(password, 12);
 
     const resultado = await pool.query(
-      `INSERT INTO usuarios (nombre, email, password_hash, rol)
+      `INSERT INTO usuarios (nombre, email, contrasena, rol)
        VALUES ($1, $2, $3, $4)
-       RETURNING id, nombre, email, rol, created_at`,
-      [nombre.trim(), emailNormalizado, passwordHash, "cliente"]
+       RETURNING id, nombre, email, rol, fecha_registro`,
+      [nombre.trim(), emailNormalizado, contrasenaHash, "cliente"]
     );
 
     return res.status(201).json({
@@ -66,7 +66,7 @@ const login = async (req, res) => {
     const emailNormalizado = email.trim().toLowerCase();
 
     const resultado = await pool.query(
-      `SELECT id, nombre, email, password_hash, rol
+      `SELECT id, nombre, email, contrasena, rol
        FROM usuarios
        WHERE email = $1`,
       [emailNormalizado]
@@ -82,7 +82,7 @@ const login = async (req, res) => {
 
     const passwordCorrecta = await bcrypt.compare(
       password,
-      usuario.password_hash
+      usuario.contrasena
     );
 
     if (!passwordCorrecta) {
