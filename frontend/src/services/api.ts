@@ -3,7 +3,9 @@ export type Sesion = { token: string; usuario: Usuario };
 
 // En desarrollo usa la API local; en un despliegue sin configuración, el mismo origen.
 const apiBase = (import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api')).replace(/\/+$/, '');
-const claveSesion = 'fitzone-hn:token:v1';
+let tokenEnMemoria: string | null = null;
+// Retira tokens persistidos por versiones anteriores. Al recargar se requiere iniciar sesión.
+try { sessionStorage.removeItem('fitzone-hn:token:v1'); } catch { /* Almacenamiento bloqueado. */ }
 
 export class ErrorApi extends Error {
   status: number;
@@ -80,12 +82,9 @@ export async function consultarPerfil(token: string, signal?: AbortSignal): Prom
 }
 
 export function leerToken(): string | null {
-  try { return sessionStorage.getItem(claveSesion) || null; } catch { return null; }
+  return tokenEnMemoria;
 }
 
 export function conservarToken(token: string | null) {
-  try {
-    if (token) sessionStorage.setItem(claveSesion, token);
-    else sessionStorage.removeItem(claveSesion);
-  } catch { /* La sesión sigue disponible en memoria hasta cerrar o recargar. */ }
+  tokenEnMemoria = token;
 }

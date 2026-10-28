@@ -18,7 +18,11 @@ La API debe permitir el origen del frontend mediante CORS y usar HTTPS en despli
 
 ## Persistencia
 
-Se guardan sede, plan y paso en `sessionStorage`; los precios se consultan siempre en el catálogo del frontend. El token también se conserva solo en esta pestaña y se valida contra `/users/me` al restaurar. Las contraseñas no se guardan. Cambiar de cuenta elimina el token local; no revoca tokens en el servidor porque no existe un endpoint de cierre de sesión.
+Se guardan únicamente sede, plan y paso en `sessionStorage`; los precios se consultan siempre en el catálogo del frontend. El token de autenticación permanece únicamente en memoria: no se guarda en `sessionStorage` ni en `localStorage`. Las contraseñas tampoco se guardan en esos almacenamientos.
+
+Al recargar la página se pierde la sesión en memoria y es necesario iniciar sesión nuevamente, aunque la sede y el plan seleccionados se conservan. Durante la navegación sin recargar, una sesión existente se verifica contra `/users/me` antes de avanzar al resumen. La autenticación se comparte entre la portada y el proceso de inscripción.
+
+Cerrar sesión o cambiar de cuenta elimina el token en memoria sin borrar la sede ni la membresía seleccionadas. No revoca tokens en el servidor porque no existe un endpoint de cierre de sesión.
 
 Si el navegador bloquea el almacenamiento, el flujo funciona en memoria, pero no puede conservarse al recargar. El almacenamiento no sustituye la validación de autenticación ni debe utilizarse para autorizar solicitudes en el backend.
 
@@ -34,4 +38,19 @@ Los identificadores del catálogo frontend son `choluteca`, `tegucigalpa`, `san-
 - `npm run lint`
 - `node --test tests/inscripcion.test.cjs` (usa Node y TypeScript ya instalados; no accede a la API ni a la base de datos).
 
-Prueba manual: abrir `/#sedes`, buscar una sede, elegir plan, continuar y alternar entre registro e inicio de sesión. Con la API apagada debe mostrarse un error sin perder la selección; con una cuenta real y API disponible debe verificarse el perfil antes de mostrar el resumen del paso 4. Recargar y usar “Retomar selección” debe recuperar sede y plan y volver a validar la sesión. Comprobar las tres formas de cierre y la navegación por teclado en móvil y escritorio.
+Prueba manual: abrir `/#sedes`, buscar una sede, elegir plan, continuar y alternar entre registro e inicio de sesión. Con la API apagada debe mostrarse un error sin perder la selección; con una cuenta real y API disponible debe verificarse el perfil antes de mostrar el resumen del paso 4. Recargar y usar “Retomar selección” debe recuperar sede y plan y solicitar un nuevo inicio de sesión. Comprobar las tres formas de cierre y la navegación por teclado en móvil y escritorio.
+
+
+## Catálogo y selecciones confirmadas
+
+`src/components/sedesData.ts` es la fuente común de nombres, precios, beneficios, alcances y presentación de los planes. PLAN FIT cuesta L 599/mes y PLAN NEGRO L 799/mes. Precios y beneficios son ilustrativos y sujetos a confirmación.
+
+Los cambios de radio dentro de un modal son borradores. En el modal del plan, CONTINUAR INSCRIPCIÓN confirma plan y sede. Desde las tarjetas de sedes, INSCRÍBETE AHORA abre un borrador con esa sede y CONTINUAR INSCRIPCIÓN confirma la elección antes de pasar a cuenta. VER GIMNASIO solo consulta información. Cerrar con CERRAR, Escape o CANCELAR descarta cambios pendientes sin reemplazar una selección confirmada.
+
+CAMBIAR SEDE conserva la membresía y guarda únicamente al pulsar CONFIRMAR CAMBIO DE SEDE. RETOMAR SELECCIÓN recupera los valores confirmados; NUEVA INSCRIPCIÓN elimina solo esos valores, no la sesión autenticada. Los pasos de cuenta y resumen conservan sus validaciones y la confirmación definitiva permanece deshabilitada.
+
+## Revisión de interfaz
+
+El menú móvil conserva las cinco secciones y el acceso a cuenta dentro de un panel desplegable. Se cierra al elegir destino, iniciar sesión, pulsar el botón de menú o Escape. El encabezado de computadora mantiene sus controles visibles.
+
+Verificar en Chrome a 320, 390, 768, 820, 1024 y 1440 píxeles. Las pruebas de autenticación automatizadas emplean respuestas controladas y no certifican una integración real con backend o PostgreSQL. Esa integración requiere autorización y pruebas posteriores con el equipo de backend.
